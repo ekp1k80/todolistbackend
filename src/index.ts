@@ -6,7 +6,8 @@ import swaggerUI from 'swagger-ui-express'
 import swaggerSpecs from './swagger/swagger'
 const app = express();
 const PORT = 3000;
-
+require('dotenv').config();
+console.log(process.env)
 const config = {
   authRequired: false,
   auth0Logout: true,
