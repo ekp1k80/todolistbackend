@@ -1,35 +1,17 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const mongoose = require('mongoose');
-require('dotenv').config();
-console.log(process.env)
 
 // Database configuration
-const dbType = process.env.DB_TYPE || 'mongoose'; // Use 'postgres' or 'mongoose' as database type
+const dbType = process.env.DB_TYPE || 'mongoose'; // use 'sequelize' or 'mongoose'
 
-// Sequelize (PostgreSQL) setup
-const sequelize = new Sequelize(process.env.POSTGRES_DATABASE_URL, {
+const sequelize = new Sequelize('postgres://postgres:fede311299@localhost:5432/todoDB', {
   logging: false,
 });
 
-// Sequelize model
-const TodoSequelize = sequelize.define('Todo', {
-  task: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  completed: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-  },
-}, {
-  paranoid: true, // Enable soft deletes
-  timestamps: true, // Sequelize automatically handles createdAt and updatedAt
-});
 
-// Mongoose (MongoDB) setup
-mongoose.connect(process.env.MONGODB_DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('Error connecting to MongoDB:', err));
+mongoose.connect('mongodb://localhost:27017/todoDB', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connecting to MongoDB'))
+  .catch((err) => console.error('Connection error with MongoDB:', err));
 
 const todoSchema = new mongoose.Schema({
   task: { type: String, required: true },
@@ -38,50 +20,35 @@ const todoSchema = new mongoose.Schema({
 
 const TodoMongoose = mongoose.model('Todo', todoSchema);
 
-// Function to seed example data only if the database is empty
-async function seed() {
+async function migrate() {
   try {
-    console.log('Starting seed process...');
-
-    const seedData = [
-      { task: 'Buy Bread', completed: false },
-      { task: 'Study JavaScript', completed: true },
-      { task: 'Call Mom', completed: false },
-    ];
+    console.log('Migration init...');
 
     if (dbType === 'postgres') {
-      // Check if database is empty (Sequelize)
-      const count = await TodoSequelize.count();
-      if (count === 0) {
-        await TodoSequelize.bulkCreate(seedData);
-        console.log('Data inserted with Sequelize (PostgreSQL).');
-      } else {
-        console.log('Database already contains data. Skipping seed.');
-      }
-    } else if (dbType === 'mongoose') {
-      // Check if database is empty (Mongoose)
-      const count = await TodoMongoose.countDocuments();
-      if (count === 0) {
-        await TodoMongoose.insertMany(seedData);
-        console.log('Data inserted with Mongoose (MongoDB).');
-      } else {
-        console.log('Database already contains data. Skipping seed.');
-      }
+      // Sincronizar con Sequelize (PostgreSQL)
+      await sequelize.sync({ force: false }); // No borrar los datos previos
+      console.log('Tables syncronized with Sequelize (PostgreSQL).');
+    } else if (dbType === 'mongodb') {
+      // Sincronización de la colección con Mongoose (MongoDB)
+      // Mongoose maneja la creación de la colección automáticamente,
+      // pero si necesitas forzar una acción, como asegurar que los índices estén creados:
+      await TodoMongoose.init(); // Esto asegurará que Mongoose cree la colección si no existe
+      console.log('Collections sincronized with Mongoose (MongoDB).');
     } else {
-      throw new Error('Unknown database type.');
+      throw new Error('Unknow database type.');
     }
-
+    
   } catch (error) {
-    console.error('Error during seed process:', error);
+    console.error('Error during migration:', error);
   } finally {
-    // Close the database connection
+    // Cerrar la conexión
     if (dbType === 'postgres') {
       await sequelize.close();
-    } else if (dbType === 'mongoose') {
+    } else if (dbType === 'mongodb') {
       await mongoose.disconnect();
     }
   }
 }
 
-// Execute the seed function
-seed();
+// Ejecutar la migración
+migrate();
