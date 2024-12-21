@@ -5,12 +5,12 @@ console.log(process.env)
 // Database configuration
 const dbType = process.env.DB_TYPE || 'mongodb'; // use 'sequelize' or 'mongoose'
 
-const sequelize = new Sequelize('postgres://postgres:fede311299@localhost:5432/todoDB', {
+const sequelize = new Sequelize(process.env.POSTGRES_DATABASE_URL, {
   logging: false,
 });
 
 
-mongoose.connect('mongodb://localhost:27017/todoDB', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGODB_DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connecting to MongoDB'))
   .catch((err) => console.error('Connection error with MongoDB:', err));
 
