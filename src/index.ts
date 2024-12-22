@@ -4,10 +4,10 @@ import authMiddleware  from "./middleware/authMiddleware";
 import todoRoutes from "./routes/todoRoutes";
 import swaggerUI from 'swagger-ui-express'
 import swaggerSpecs from './swagger/swagger'
+var cors = require('cors')
 const app = express();
 const PORT = 3000;
 require('dotenv').config();
-console.log(process.env)
 const config = {
   authRequired: false,
   auth0Logout: true,
@@ -17,6 +17,7 @@ const config = {
   issuerBaseURL: process.env.ISSUER_BASE_URL
 };
 
+app.use(cors())
 // Middleware
 app.use(express.json());
 

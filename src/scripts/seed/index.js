@@ -1,7 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const mongoose = require('mongoose');
 require('dotenv').config();
-console.log(process.env)
 const dbType = process.env.DB_TYPE || 'mongoose'; // use 'postgres' o 'mongoose'
 
 const sequelize = new Sequelize(process.env.POSTGRES_DATABASE_URL, {
